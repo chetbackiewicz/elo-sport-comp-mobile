@@ -41,7 +41,6 @@ const MyProfileScreen = (props) => {
           const profileJson = await profileResponse.json();
           const recordJson = await recordResponse.json();
           const scoreJson = await scoreResponse.json();
-          console.log('some data ', profileData, recordJson, scoreJson)
           if (scoreJson == null) {
               setScoreData([]);
           } else {

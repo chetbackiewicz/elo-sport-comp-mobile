@@ -34,7 +34,7 @@ const ChallengeScreen = () => {
   const searchOpponentRef = React.useRef(null);
   const searchRefereeRef = React.useRef(null);
 
-  const athlete_id = useSelector((state) => state.athlete.athleteId);
+  const athlete_id = useSelector((state) => state.athlete.athlete_id);
 
   useFocusEffect(
     //chcking if the athlete_id is changed
@@ -46,7 +46,8 @@ const ChallengeScreen = () => {
 
   useEffect(() => {
     const fetchAthletes = async () => {
-      const response = await axios.get("http://localhost:8000/api/v1/athletes");
+      const response = await axios.get("https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/getAllAthletes");
+      console.log("response: ", response.data);
       setAthletes(response.data);
     };
     fetchAthletes();
@@ -61,13 +62,14 @@ const ChallengeScreen = () => {
   }, [searchReferee]);
 
   const filteredAthletes = (searchValue) => {
-    return athletes.filter(
+    const ahletesFiltered = athletes.filter(
       (athlete) =>
-        athlete?.athlete_id !== athlete_id?.athleteId &&
+        athlete?.athleteId !== athlete_id?.athleteId &&
         (athlete.username.toLowerCase().includes(searchValue.toLowerCase()) ||
           athlete.firstName.toLowerCase().includes(searchValue.toLowerCase()) ||
           athlete.lastName.toLowerCase().includes(searchValue.toLowerCase()))
     );
+    return ahletesFiltered;
   };
 
   const handleOpponentSelect = (athlete) => {
@@ -94,16 +96,19 @@ const ChallengeScreen = () => {
 
   useEffect(() => {
     const fetchStyles = async () => {
+      console.log("opponent before getting styles: ", opponent);
+      console.log("athlete_id: ", athlete_id);
       if (opponent) {
         const response = await axios.get(
-          `http://localhost:8000/api/v1/styles/common/${opponent.athlete_id}/${athlete_id.athleteId}`
-        );
-        setStyles(response.data);
-      }
+          `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/getCommonStyles/${opponent.athlete_id}/${athlete_id.athleteId}`
+        ).then((response) => {
+          console.log("response from styles: ", response.data);
+          setStyles(response.data);
+        })
     };
-
+    console.log("Got here! WOOOOOOOO")
     fetchStyles();
-  }, [opponent]);
+  }}, [opponent]);
 
   const handleStyleSelect = (style) => {
     setSelectedStyle(style);
@@ -113,7 +118,7 @@ const ChallengeScreen = () => {
     if (athlete_id.athleteId) {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/bouts/pending/${athlete_id.athleteId}`
+        `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/getPendingBouts/${athlete_id.athleteId}`
       );
       const json = await response.json();
       setPendingBouts(json);
@@ -127,7 +132,7 @@ const ChallengeScreen = () => {
     if (athlete_id.athleteId) {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/bouts/incomplete/${athlete_id.athleteId}`
+        `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/getIncompleteBouts/${athlete_id.athleteId}`
       );
       const json = await response.json();
       setIncompleteBouts(json);
@@ -145,13 +150,10 @@ const ChallengeScreen = () => {
         styleId: styleId,
         isDraw: isDraw,
       };
-      console.log("Outcome payload: ", payload);
-      console.log("boutId: ", boutId);
       const response = await axios.post(
-        `http://localhost:8000/api/v1/outcome/bout/${boutId}`,
+        `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/createOutcome/${boutId}`,
         payload
       );
-      console.log("response: ", response);
       if (response.status === 200) {
         fetchPendingBouts();
         fetchIncompleteBouts();
@@ -163,7 +165,7 @@ const ChallengeScreen = () => {
     if (boutId && athlete_id.athleteId) {
       try {
         const response = await axios.put(
-          `http://localhost:8000/api/v1/bout/cancel/${boutId}/${athlete_id.athleteId}`
+          `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/cancelBout/${boutId}/${athlete_id.athleteId}`
         );
         if (response.status === 200) {
           fetchPendingBouts();
@@ -178,7 +180,7 @@ const ChallengeScreen = () => {
     if (boutId) {
     try {
       const response = await axios.put(
-        `http://localhost:8000/api/v1/bout/${boutId}/accept`
+        `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/acceptBout/${boutId}`
       );
       if (response.status === 200) {
         fetchPendingBouts();
@@ -191,10 +193,9 @@ const ChallengeScreen = () => {
 
   const handleDeclineBout = async (boutId) => {
     if (boutId) {
-    console.log("boutId: ", boutId);
     try {
       const response = await axios.put(
-        `http://localhost:8000/api/v1/bout/${boutId}/decline`
+        `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/declineBout/${boutId}`
       );
       if (response.status === 200) {
         fetchPendingBouts();
@@ -206,6 +207,10 @@ const ChallengeScreen = () => {
   };
 
   const createBout = async () => {
+    console.log("opponent: ", opponent);
+    console.log("referee: ", referee);
+    console.log("selectedStyle: ", selectedStyle);
+    console.log("athlete_id: ", athlete_id.athleteId);
     if (opponent && referee && selectedStyle && athlete_id.athleteId) {
       if (opponent.athlete_id === referee.athlete_id) {
         alert("Opponent and referee cannot be the same person");
@@ -224,7 +229,7 @@ const ChallengeScreen = () => {
       console.log("Payload: ", payload);
 
       const response = await axios.post(
-        "http://localhost:8000/api/v1/bout",
+        "https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/bout",
         payload
       );
 

@@ -26,7 +26,7 @@ const handleLogin = async () => {
     }
   
     try {
-      const response = await fetch('http://localhost:8000/api/v1/athlete/authorize', {
+      const response = await fetch('https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/authorizeAthlete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

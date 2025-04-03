@@ -12,6 +12,7 @@ import {
 import { setAthleteId } from '../reducers/athleteSlice';
 
 import { useDispatch } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = (props) => {
   const [username, setUsername] = useState('');
@@ -19,47 +20,68 @@ const LoginScreen = (props) => {
 
   const dispatch = useDispatch();
 
-const handleLogin = async () => {
+  const handleLogin = async () => {
     if (!username || !password) {
-      Alert.alert('Error', 'Please enter your username and password.');
+      Alert.alert("Error", "Please enter both username and password");
       return;
     }
-  
+
     try {
-      const response = await fetch('https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/authorizeAthlete', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8000/api/v1/athlete/authorize", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username,
-          password,
+          username: username,
+          password: password,
         }),
       });
 
-      if (response.status === 401) {
-        // Handle unauthorized access
-        Alert.alert('Error', 'Invalid username or password.');
-        return;
-      } else if (!response.ok) {
-        // Handle other errors based on status code or throw a generic error
-        throw new Error('Something went wrong with the login process.');
-      }
-  
-      const data = await response.json(); // Correctly call the json() method
-      console.log('data, ', data);
-      // Now that data is correctly parsed, check its value
-      if (data === false) {
-        Alert.alert('Error', 'Invalid username or password. Sign Up Below');
-      } else {
+      console.log("Login response status:", response.status);
+      const data = await response.json();
+      console.log("Login response data:", JSON.stringify(data, null, 2));
+
+      if (response.ok) {
+        // The backend sends athleteId (lowercase a)
+        const athleteId = data.athleteId;
+        console.log("Login successful, athlete ID:", athleteId);
+
+        if (!athleteId) {
+          console.error("No athlete ID in response:", data);
+          Alert.alert("Error", "Invalid response from server");
+          return;
+        }
+
+        // Store the athlete data in Redux
         dispatch(setAthleteId(data));
-        props.navigation.navigate('Home', { initialRoute: 'Challenge' });
+
+        // Store just the ID in AsyncStorage
+        await AsyncStorage.setItem("athleteId", athleteId.toString());
+        
+        props.navigation.navigate("Home", { initialRoute: 'Challenge' });
+      } else {
+        console.error("Login failed with status:", response.status);
+        console.error("Error response:", data);
+        Alert.alert("Error", data.error || "Invalid username or password");
       }
     } catch (error) {
-      console.log('Error logging in:', error);
-      Alert.alert('Login Error', 'There was a problem logging in. Please try again later.');
+      console.error("Error logging in:", error);
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        response: error.response ? {
+          status: error.response.status,
+          data: error.response.data
+        } : 'No response data'
+      });
+      Alert.alert(
+        "Error", 
+        "Could not connect to the server. Please check your internet connection and try again."
+      );
     }
   };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Login</Text>

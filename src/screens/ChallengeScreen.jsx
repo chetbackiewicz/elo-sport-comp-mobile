@@ -46,7 +46,7 @@ const ChallengeScreen = () => {
 
   useEffect(() => {
     const fetchAthletes = async () => {
-      const response = await axios.get("https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/getAllAthletes");
+      const response = await axios.get("http://localhost:8000/api/v1/athletes");
       console.log("response: ", response.data);
       setAthletes(response.data);
     };
@@ -100,7 +100,7 @@ const ChallengeScreen = () => {
       console.log("athlete_id: ", athlete_id);
       if (opponent) {
         const response = await axios.get(
-          `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/getCommonStyles/${opponent.athlete_id}/${athlete_id.athleteId}`
+          `http://localhost:8000/api/v1/styles/common/${opponent.athlete_id}/${athlete_id.athleteId}`
         ).then((response) => {
           console.log("response from styles: ", response.data);
           setStyles(response.data);
@@ -118,7 +118,7 @@ const ChallengeScreen = () => {
     if (athlete_id.athleteId) {
     try {
       const response = await fetch(
-        `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/getPendingBouts/${athlete_id.athleteId}`
+        `http://localhost:8000/api/v1/bouts/pending/${athlete_id.athleteId}`
       );
       const json = await response.json();
       setPendingBouts(json);
@@ -132,7 +132,7 @@ const ChallengeScreen = () => {
     if (athlete_id.athleteId) {
     try {
       const response = await fetch(
-        `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/getIncompleteBouts/${athlete_id.athleteId}`
+        `http://localhost:8000/api/v1/bouts/incomplete/${athlete_id.athleteId}`
       );
       const json = await response.json();
       setIncompleteBouts(json);
@@ -151,7 +151,7 @@ const ChallengeScreen = () => {
         isDraw: isDraw,
       };
       const response = await axios.post(
-        `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/createOutcome/${boutId}`,
+        `http://localhost:8000/api/v1/outcome/bout/${boutId}`,
         payload
       );
       if (response.status === 200) {
@@ -165,7 +165,7 @@ const ChallengeScreen = () => {
     if (boutId && athlete_id.athleteId) {
       try {
         const response = await axios.put(
-          `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/cancelBout/${boutId}/${athlete_id.athleteId}`
+          `http://localhost:8000/api/v1/bout/cancel/${boutId}/${athlete_id.athleteId}`
         );
         if (response.status === 200) {
           fetchPendingBouts();
@@ -180,7 +180,7 @@ const ChallengeScreen = () => {
     if (boutId) {
     try {
       const response = await axios.put(
-        `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/acceptBout/${boutId}`
+        `http://localhost:8000/api/v1/bout/${boutId}/accept`
       );
       if (response.status === 200) {
         fetchPendingBouts();
@@ -195,7 +195,7 @@ const ChallengeScreen = () => {
     if (boutId) {
     try {
       const response = await axios.put(
-        `https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/declineBout/${boutId}`
+        `http://localhost:8000/api/v1/bout/${boutId}/decline`
       );
       if (response.status === 200) {
         fetchPendingBouts();
@@ -758,6 +758,18 @@ const layout = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     paddingTop: 5,
+  },
+  opponent: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  referee: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 20,
+    marginBottom: 10,
   },
 });
 

@@ -25,26 +25,32 @@ const MyProfileScreen = (props) => {
     React.useCallback(() => {
       const fetchData = async () => {
         try {
-          const profileResponse = await fetch(`http://localhost:8000/api/v1/athlete/${athleteId.athleteId}`);
+          if (!athleteId) {
+            console.log('No athlete ID found');
+            return;
+          }
+
+          const profileResponse = await fetch(`http://localhost:8000/api/v1/athlete/${athleteId}`);
           if (!profileResponse.ok) {
             throw new Error(`HTTP error! Status fetching profile: ${profileResponse.status}`);
           }
-          const recordResponse = await fetch(`http://localhost:8000/api/v1/athlete/${athleteId.athleteId}/record`);
+          const recordResponse = await fetch(`http://localhost:8000/api/v1/athlete/${athleteId}/record`);
           if (!recordResponse.ok) {
             throw new Error(`HTTP error! Status fetching record: ${recordResponse.status}`);
           }
-          const scoreResponse = await fetch(`http://localhost:8000/api/v1/score/${athleteId.athleteId}`);
-          if (!recordResponse.ok) {
-            throw new Error(`HTTP error! Status fetching record: ${recordResponse.status}`);
+          const scoreResponse = await fetch(`http://localhost:8000/api/v1/score/${athleteId}`);
+          if (!scoreResponse.ok) {
+            throw new Error(`HTTP error! Status fetching scores: ${scoreResponse.status}`);
           }
 
           const profileJson = await profileResponse.json();
           const recordJson = await recordResponse.json();
           const scoreJson = await scoreResponse.json();
+          console.log('Score data received:', scoreJson);
           if (scoreJson == null) {
-              setScoreData([]);
+            setScoreData([]);
           } else {
-              setScoreData(scoreJson);
+            setScoreData(scoreJson);
           }
           setProfileData(profileJson);
           setRecordData(recordJson);
@@ -109,12 +115,19 @@ const MyProfileScreen = (props) => {
         {/* Ratings */}
         <Text style={styles.ratingTitle}>Ratings</Text>
         <View style={styles.ratingContainer}>
-        {scoreData.map((item) => (
-            <View style={styles.ratingRow} key={item.styleName}>
-            <Text style={styles.styleName}>{item.styleName}</Text>
-            <Text style={styles.score}>{item.score}</Text>
-            </View>
-        ))}
+          {scoreData && scoreData.length > 0 ? (
+            scoreData.map((item, index) => {
+              console.log('Rendering score item:', item);
+              return (
+                <View style={styles.ratingRow} key={`${item.styleName}-${index}`}>
+                  <Text style={styles.styleName}>{item.styleName}</Text>
+                  <Text style={styles.score}>{item.score}</Text>
+                </View>
+              );
+            })
+          ) : (
+            <Text style={styles.noScores}>No ratings available</Text>
+          )}
         </View>
 
         {/* User information */}
@@ -268,6 +281,12 @@ const styles = StyleSheet.create({
       fontSize: 18,
       fontWeight: "bold",
       paddingTop: 5,
+    },
+    noScores: {
+      textAlign: 'center',
+      fontStyle: 'italic',
+      color: '#666',
+      marginTop: 10,
     },
 });
 

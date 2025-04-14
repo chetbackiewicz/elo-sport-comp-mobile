@@ -524,12 +524,7 @@ const ChallengeScreen = () => {
                   </View>
                 </View>
                 <View style={layout.buttonContainer}>
-                  {athlete_id?.athleteId === bout?.challengerId ||
-                    athlete_id?.athleteId === bout?.acceptorId ? (
-                    <Text style={layout.refereeDecisionText}>
-                      Awaiting Referee Decision
-                    </Text>
-                  ) : (
+                  {athlete_id?.athleteId === bout?.refereeId ? (
                     <View style={layout.decisionContainer}>
                       <Text style={layout.refereeDecisionText}>Winner:</Text>
                       <View style={layout.decisionButtons}>
@@ -581,6 +576,10 @@ const ChallengeScreen = () => {
                         </TouchableOpacity>
                       </View>
                     </View>
+                  ) : (
+                    <Text style={layout.refereeDecisionText}>
+                      Awaiting Referee Decision
+                    </Text>
                   )}
                 </View>
               </View>

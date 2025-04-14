@@ -16,12 +16,45 @@ const FeedScreen = () => {
   const [feedData, setFeedData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [commentInputVisible, setCommentInputVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const athleteId = useSelector((state) => state.athlete.athleteId);
 
   const fetchFeedData = async () => {
-    const response = await axios.get(`http://localhost:8000/api/v1/feed/${athleteId.athleteId}`);
-    setFeedData(response.data);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      if (!athleteId) {
+        console.error("No athlete ID available for feed");
+        setError("You need to be logged in to view your feed");
+        setLoading(false);
+        return;
+      }
+      
+      console.log("Fetching feed for athlete ID:", athleteId);
+      const response = await axios.get(`http://localhost:8000/api/v1/feed/${athleteId}`);
+      console.log("Feed response:", response);
+      console.log("Feed data:", response.data);
+      
+      if (Array.isArray(response.data) && response.data.length === 0) {
+        console.log("Feed is empty. You might not be following any athletes with completed bouts.");
+        setError("Your feed is empty. Follow more athletes or wait for bout results!");
+      }
+      
+      setFeedData(response.data || []);
+    } catch (error) {
+      console.error("Error fetching feed data:", error);
+      if (error.response) {
+        console.error("Response status:", error.response.status);
+        console.error("Response data:", error.response.data);
+      }
+      setError("Could not load feed data. Please try again later.");
+      setFeedData([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onRefresh = useCallback(() => {
@@ -83,25 +116,36 @@ const FeedScreen = () => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={feedData}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.boutId.toString()} 
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      />
+      {loading && !refreshing ? (
+        <View style={styles.messageContainer}>
+          <Text style={styles.messageText}>Loading feed data...</Text>
+        </View>
+      ) : error ? (
+        <View style={styles.messageContainer}>
+          <Text style={styles.messageText}>{error}</Text>
+          <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+            <Text style={styles.refreshButtonText}>Refresh</Text>
+          </TouchableOpacity>
+        </View>
+      ) : feedData.length === 0 ? (
+        <View style={styles.messageContainer}>
+          <Text style={styles.messageText}>Your feed is empty!</Text>
+          <Text style={styles.messageSubText}>Follow athletes or check back after more bouts are completed.</Text>
+          <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+            <Text style={styles.refreshButtonText}>Refresh</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={feedData}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.boutId.toString()} 
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        />
+      )}
     </View>
-  //   <>
-  //     <ul>
-  //       {this.state.allTexts.map((text, i) => (
-  //         <li key={i}
-  //         <span>Text: {text}</span>
-  //         </li>
-  //     )}
-  //     </ul>
-  //  </>
-    
   );
 };
 
@@ -166,6 +210,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     marginTop: 10,
+  },
+  messageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  messageText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  messageSubText: {
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+    color: 'gray',
+  },
+  refreshButton: {
+    backgroundColor: '#1e90ff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  refreshButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 

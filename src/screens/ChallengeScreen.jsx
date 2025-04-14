@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Dimensions,
   ScrollView,
+  Alert,
 } from "react-native";
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
@@ -34,7 +35,7 @@ const ChallengeScreen = () => {
   const searchOpponentRef = React.useRef(null);
   const searchRefereeRef = React.useRef(null);
 
-  const athlete_id = useSelector((state) => state.athlete.athlete_id) || null;
+  const athlete_id = useSelector((state) => state.athlete.athleteId) || null;
 
   useFocusEffect(
     //chcking if the athlete_id is changed
@@ -46,29 +47,50 @@ const ChallengeScreen = () => {
 
   useEffect(() => {
     const fetchAthletes = async () => {
-      const response = await axios.get("http://localhost:8000/api/v1/athletes");
-      console.log("response: ", response.data);
-      setAthletes(response.data);
+      try {
+        const response = await axios.get("http://localhost:8000/api/v1/athletes");
+        console.log("response: ", response.data);
+        setAthletes(response.data);
+      } catch (error) {
+        console.error("Error fetching athletes:", error);
+        setAthletes([]);
+      }
     };
     fetchAthletes();
   }, []);
 
   useEffect(() => {
-    updateDropdownPosition();
+    if (searchOpponentRef.current) {
+      updateDropdownPosition();
+    }
   }, [searchOpponent]);
 
   useEffect(() => {
-    updateDropdownPositionReferee();
+    if (searchRefereeRef.current) {
+      updateDropdownPositionReferee();
+    }
   }, [searchReferee]);
 
   const filteredAthletes = (searchValue) => {
+    if (!athletes || athletes.length === 0 || !searchValue) {
+      return [];
+    }
+    
     const ahletesFiltered = athletes.filter(
-      (athlete) =>
-        athlete?.athleteId !== athlete_id?.athleteId &&
-        (athlete.username.toLowerCase().includes(searchValue.toLowerCase()) ||
+      (athlete) => {
+        // Check if the current athlete is not the logged-in user
+        const isNotCurrentUser = athlete.athlete_id !== athlete_id;
+        
+        // Check if the search value matches any of the athlete fields
+        const matchesSearch = 
+          athlete.username.toLowerCase().includes(searchValue.toLowerCase()) ||
           athlete.firstName.toLowerCase().includes(searchValue.toLowerCase()) ||
-          athlete.lastName.toLowerCase().includes(searchValue.toLowerCase()))
+          athlete.lastName.toLowerCase().includes(searchValue.toLowerCase());
+          
+        return isNotCurrentUser && matchesSearch;
+      }
     );
+    console.log("Filtered athletes:", ahletesFiltered.length);
     return ahletesFiltered;
   };
 
@@ -83,14 +105,20 @@ const ChallengeScreen = () => {
   };
 
   const updateDropdownPosition = () => {
+    if (!searchOpponentRef.current) return;
+    
     searchOpponentRef.current.measure((fx, fy, width, height, px, py) => {
-      setDropdownPosition({ top: py + height, left: px });
+      console.log("Opponent dropdown position:", {fx, fy, width, height, px, py});
+      setDropdownPosition({ top: py + height, left: px, width: width });
     });
   };
 
   const updateDropdownPositionReferee = () => {
+    if (!searchRefereeRef.current) return;
+    
     searchRefereeRef.current.measure((fx, fy, width, height, px, py) => {
-      setDropdownPositionReferee({ top: py + height, left: px });
+      console.log("Referee dropdown position:", {fx, fy, width, height, px, py});
+      setDropdownPositionReferee({ top: py + height, left: px, width: width });
     });
   };
 
@@ -215,27 +243,55 @@ const ChallengeScreen = () => {
     console.log("referee: ", referee);
     console.log("selectedStyle: ", selectedStyle);
     console.log("athlete_id: ", athlete_id);
-    if (opponent && referee && selectedStyle && athlete_id) {
-      if (opponent.athlete_id === referee.athlete_id) {
-        alert("Opponent and referee cannot be the same person");
-        return;
-      }
-      const payload = {
-        challengerId: athlete_id,
-        acceptorId: opponent.athlete_id,
-        refereeId: referee.athlete_id,
-        styleId: selectedStyle.styleId,
-        accepted: false,
-        completed: false,
-        cancelled: false,
-      };
+    
+    // Check if we have all the required data
+    if (!athlete_id) {
+      console.error("You must be logged in to create a bout");
+      Alert.alert("Error", "You must be logged in to create a bout. Please log out and log back in.");
+      return;
+    }
+    
+    if (!opponent) {
+      Alert.alert("Error", "Please select an opponent");
+      return;
+    }
+    
+    if (!referee) {
+      Alert.alert("Error", "Please select a referee");
+      return;
+    }
+    
+    if (!selectedStyle) {
+      Alert.alert("Error", "Please select a style");
+      return;
+    }
+    
+    if (opponent.athlete_id === referee.athlete_id) {
+      Alert.alert("Error", "Opponent and referee cannot be the same person");
+      return;
+    }
+    
+    // Create the payload with the proper challenger ID
+    // Make sure we're using the correct property
+    const payload = {
+      challengerId: athlete_id,
+      acceptorId: opponent.athlete_id,
+      refereeId: referee.athlete_id,
+      styleId: selectedStyle.styleId,
+      accepted: false,
+      completed: false,
+      cancelled: false,
+    };
 
-      console.log("Payload: ", payload);
+    console.log("Payload: ", payload);
 
+    try {
       const response = await axios.post(
-        "https://2hkpzpjvfe.execute-api.us-east-1.amazonaws.com/develop/bout",
+        "http://localhost:8000/api/v1/bout",
         payload
       );
+
+      console.log("Bout creation response:", response.data);
 
       if (response.status === 200) {
         setSearchOpponent("");
@@ -246,7 +302,11 @@ const ChallengeScreen = () => {
         setStyles([]);
         fetchPendingBouts();
         fetchIncompleteBouts();
+        Alert.alert("Success", "Bout proposed successfully");
       }
+    } catch (error) {
+      console.error("Error creating bout:", error);
+      Alert.alert("Error", "Failed to create bout. Please try again.");
     }
   };
 
@@ -264,16 +324,20 @@ const ChallengeScreen = () => {
         </View>
         {searchOpponent && (
           <View style={[layout.dropdownContainerOpponent, dropdownPosition]}>
-            {filteredAthletes(searchOpponent).map((athlete) => (
-              <TouchableOpacity
-                key={athlete.athlete_id}
-                onPress={() => handleOpponentSelect(athlete)}
-              >
-                <Text style={layout.nameInDropDownSearch}>
-                  {athlete.firstName} {athlete.lastName} ({athlete.username})
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {filteredAthletes(searchOpponent).length > 0 ? (
+              filteredAthletes(searchOpponent).map((athlete) => (
+                <TouchableOpacity
+                  key={athlete.athlete_id}
+                  onPress={() => handleOpponentSelect(athlete)}
+                >
+                  <Text style={layout.nameInDropDownSearch}>
+                    {athlete.firstName} {athlete.lastName} ({athlete.username})
+                  </Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={layout.nameInDropDownSearch}>No athletes found</Text>
+            )}
           </View>
         )}
         {opponent && (
@@ -282,7 +346,7 @@ const ChallengeScreen = () => {
             {opponent.username})
           </Text>
         )}
-        <View ref={searchRefereeRef} onLayout={() => updateDropdownPosition()}>
+        <View ref={searchRefereeRef} onLayout={() => updateDropdownPositionReferee()}>
           <TextInput
             style={layout.input}
             onChangeText={(text) => setSearchReferee(text)}
@@ -294,16 +358,20 @@ const ChallengeScreen = () => {
           <View
             style={[layout.dropdownContainerReferee, dropdownPositionReferee]}
           >
-            {filteredAthletes(searchReferee).map((athlete) => (
-              <TouchableOpacity
-                key={athlete.athlete_id}
-                onPress={() => handleRefereeSelect(athlete)}
-              >
-                <Text style={layout.nameInDropDownSearch}>
-                  {athlete.firstName} {athlete.lastName} ({athlete.username})
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {filteredAthletes(searchReferee).length > 0 ? (
+              filteredAthletes(searchReferee).map((athlete) => (
+                <TouchableOpacity
+                  key={athlete.athlete_id}
+                  onPress={() => handleRefereeSelect(athlete)}
+                >
+                  <Text style={layout.nameInDropDownSearch}>
+                    {athlete.firstName} {athlete.lastName} ({athlete.username})
+                  </Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={layout.nameInDropDownSearch}>No athletes found</Text>
+            )}
           </View>
         )}
         {referee && (
@@ -639,7 +707,9 @@ const layout = StyleSheet.create({
     position: "absolute",
     backgroundColor: "black",
     color: "white",
-    zIndex: 1,
+    zIndex: 10,
+    elevation: 5,
+    maxHeight: 200,
   },
   dropdownContainerReferee: {
     width: screenWidth * 0.8,
@@ -648,7 +718,9 @@ const layout = StyleSheet.create({
     borderRadius: 5,
     position: "absolute",
     backgroundColor: "black",
-    zIndex: 1,
+    zIndex: 10,
+    elevation: 5,
+    maxHeight: 200,
   },
   dropdown: {
     maxHeight: screenHeight * 0.3,

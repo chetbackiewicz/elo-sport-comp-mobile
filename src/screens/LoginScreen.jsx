@@ -54,7 +54,9 @@ const LoginScreen = (props) => {
         }
 
         // Store the athlete data in Redux
-        dispatch(setAthleteId(data));
+        console.log("Storing in Redux:", athleteId);
+        // Just store the ID directly instead of the whole object
+        dispatch(setAthleteId(athleteId));
 
         // Store just the ID in AsyncStorage
         await AsyncStorage.setItem("athleteId", athleteId.toString());
@@ -96,15 +98,21 @@ const LoginScreen = (props) => {
       });
 
       const data = await response.json();
+      console.log("Bypass login response:", data);
 
       if (response.ok) {
         const athleteId = data.athleteId;
+        console.log("Bypass login successful, athlete ID:", athleteId);
+        
         if (!athleteId) {
           Alert.alert("Error", "Invalid response from server");
           return;
         }
 
-        dispatch(setAthleteId(data));
+        // Just store the ID directly
+        console.log("Storing in Redux:", athleteId);
+        dispatch(setAthleteId(athleteId));
+        
         await AsyncStorage.setItem("athleteId", athleteId.toString());
         props.navigation.navigate("Home", { initialRoute: 'Challenge' });
       } else {

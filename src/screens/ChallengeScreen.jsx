@@ -34,7 +34,7 @@ const ChallengeScreen = () => {
   const searchOpponentRef = React.useRef(null);
   const searchRefereeRef = React.useRef(null);
 
-  const athlete_id = useSelector((state) => state.athlete.athlete_id);
+  const athlete_id = useSelector((state) => state.athlete.athlete_id) || null;
 
   useFocusEffect(
     //chcking if the athlete_id is changed
@@ -96,49 +96,53 @@ const ChallengeScreen = () => {
 
   useEffect(() => {
     const fetchStyles = async () => {
-      console.log("opponent before getting styles: ", opponent);
-      console.log("athlete_id: ", athlete_id);
-      if (opponent) {
-        const response = await axios.get(
-          `http://localhost:8000/api/v1/styles/common/${opponent.athlete_id}/${athlete_id.athleteId}`
-        ).then((response) => {
+      if (opponent && athlete_id) {
+        try {
+          const response = await axios.get(
+            `http://localhost:8000/api/v1/styles/common/${opponent.athlete_id}/${athlete_id}`
+          );
           console.log("response from styles: ", response.data);
           setStyles(response.data);
-        })
+        } catch (error) {
+          console.error("Error fetching styles:", error);
+          setStyles([]);
+        }
+      }
     };
-    console.log("Got here! WOOOOOOOO")
     fetchStyles();
-  }}, [opponent]);
+  }, [opponent, athlete_id]);
 
   const handleStyleSelect = (style) => {
     setSelectedStyle(style);
   };
 
   const fetchPendingBouts = async () => {
-    if (athlete_id.athleteId) {
+    if (!athlete_id) return;
+
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/bouts/pending/${athlete_id.athleteId}`
+        `http://localhost:8000/api/v1/bouts/pending/${athlete_id}`
       );
       const json = await response.json();
       setPendingBouts(json);
     } catch (error) {
-      console.log("Error fetching pending bouts:", error);
+      console.error("Error fetching pending bouts:", error);
+      setPendingBouts([]);
     }
-  }
   };
 
   const fetchIncompleteBouts = async () => {
-    if (athlete_id.athleteId) {
+    if (!athlete_id) return;
+
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/bouts/incomplete/${athlete_id.athleteId}`
+        `http://localhost:8000/api/v1/bouts/incomplete/${athlete_id}`
       );
       const json = await response.json();
       setIncompleteBouts(json);
     } catch (error) {
-      console.log("Error fetching incomplete bouts:", error);
-    }
+      console.error("Error fetching incomplete bouts:", error);
+      setIncompleteBouts([]);
     }
   };
 
@@ -162,10 +166,10 @@ const ChallengeScreen = () => {
   };
 
   const handleCancelBout = async (boutId) => {
-    if (boutId && athlete_id.athleteId) {
+    if (boutId && athlete_id) {
       try {
         const response = await axios.put(
-          `http://localhost:8000/api/v1/bout/cancel/${boutId}/${athlete_id.athleteId}`
+          `http://localhost:8000/api/v1/bout/cancel/${boutId}/${athlete_id}`
         );
         if (response.status === 200) {
           fetchPendingBouts();
@@ -178,46 +182,46 @@ const ChallengeScreen = () => {
 
   const handleAcceptBout = async (boutId) => {
     if (boutId) {
-    try {
-      const response = await axios.put(
-        `http://localhost:8000/api/v1/bout/${boutId}/accept`
-      );
-      if (response.status === 200) {
-        fetchPendingBouts();
+      try {
+        const response = await axios.put(
+          `http://localhost:8000/api/v1/bout/${boutId}/accept`
+        );
+        if (response.status === 200) {
+          fetchPendingBouts();
+        }
+      } catch (error) {
+        console.log("Error accepting bout:", error);
       }
-    } catch (error) {
-      console.log("Error accepting bout:", error);
     }
-  }
   };
 
   const handleDeclineBout = async (boutId) => {
     if (boutId) {
-    try {
-      const response = await axios.put(
-        `http://localhost:8000/api/v1/bout/${boutId}/decline`
-      );
-      if (response.status === 200) {
-        fetchPendingBouts();
+      try {
+        const response = await axios.put(
+          `http://localhost:8000/api/v1/bout/${boutId}/decline`
+        );
+        if (response.status === 200) {
+          fetchPendingBouts();
+        }
+      } catch (error) {
+        console.log("Error declining bout:", error);
       }
-    } catch (error) {
-      console.log("Error declining bout:", error);
     }
-  }
   };
 
   const createBout = async () => {
     console.log("opponent: ", opponent);
     console.log("referee: ", referee);
     console.log("selectedStyle: ", selectedStyle);
-    console.log("athlete_id: ", athlete_id.athleteId);
-    if (opponent && referee && selectedStyle && athlete_id.athleteId) {
+    console.log("athlete_id: ", athlete_id);
+    if (opponent && referee && selectedStyle && athlete_id) {
       if (opponent.athlete_id === referee.athlete_id) {
         alert("Opponent and referee cannot be the same person");
         return;
       }
       const payload = {
-        challengerId: athlete_id.athleteId,
+        challengerId: athlete_id,
         acceptorId: opponent.athlete_id,
         refereeId: referee.athlete_id,
         styleId: selectedStyle.styleId,
@@ -453,7 +457,7 @@ const ChallengeScreen = () => {
                 </View>
                 <View style={layout.buttonContainer}>
                   {athlete_id?.athleteId === bout?.challengerId ||
-                  athlete_id?.athleteId === bout?.acceptorId ? (
+                    athlete_id?.athleteId === bout?.acceptorId ? (
                     <Text style={layout.refereeDecisionText}>
                       Awaiting Referee Decision
                     </Text>

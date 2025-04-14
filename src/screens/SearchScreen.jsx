@@ -31,16 +31,31 @@ const SearchScreen = () => {
   }, []);
 
   const fetchFollowing = async () => {
-    const response = await axios.get(
-      `http://localhost:8000/api/v1/athletes/following/${athleteId.athleteId}`,
-    );
-    console.log("response from fetch following: ", response)
-    setFollowing(response.data);
+    if (!athleteId) return;
+    
+    // Extract numeric ID if athleteId is an object
+    const actualId = typeof athleteId === 'object' && athleteId !== null ? 
+                    athleteId.athleteId : athleteId;
+                    
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/v1/athletes/following/${actualId}`,
+      );
+      console.log("response from fetch following: ", response)
+      setFollowing(response.data);
+    } catch (error) {
+      console.error("Error fetching following:", error);
+      setFollowing([]);
+    }
   };
 
   const filteredAthletes = () => {
+    // Extract numeric ID if athleteId is an object
+    const actualId = typeof athleteId === 'object' && athleteId !== null ? 
+                    athleteId.athleteId : athleteId;
+                    
     return athletes.filter((athlete) =>
-      athlete.athlete_id !== athleteId.athleteId &&
+      athlete.athlete_id !== actualId &&
       (athlete.username.toLowerCase().includes(searchValue.toLowerCase()) ||
         athlete.firstName.toLowerCase().includes(searchValue.toLowerCase()) ||
         athlete.lastName.toLowerCase().includes(searchValue.toLowerCase())),
@@ -55,19 +70,35 @@ const SearchScreen = () => {
   };
 
   const handleFollow = async (followedId) => {
+    if (!athleteId) return;
+    
+    // Extract numeric ID if athleteId is an object
+    const actualId = typeof athleteId === 'object' && athleteId !== null ? 
+                    athleteId.athleteId : athleteId;
+    
     const payload = {
-      followerId: athleteId.athleteId,
+      followerId: actualId,
       followedId: followedId,
     }
+    
     console.log("payload for following: ", payload)
+    
     if (isFollowing(followedId)) {
-      await axios.delete(`http://localhost:8000/api/v1/athletes/${athleteId.athleteId}/${followedId}/unfollow`);
+      try {
+        await axios.delete(`http://localhost:8000/api/v1/athletes/${actualId}/${followedId}/unfollow`);
+        fetchFollowing();
+      } catch (error) {
+        console.error("Error unfollowing athlete:", error);
+      }
     } else {
-      await axios.post('http://localhost:8000/api/v1/athletes/follow',
-        payload
-      );
+      try {
+        const response = await axios.post('http://localhost:8000/api/v1/athletes/follow', payload);
+        console.log("Follow response:", response.data);
+        fetchFollowing();
+      } catch (error) {
+        console.error("Error following athlete:", error);
+      }
     }
-    fetchFollowing();
   };
 
   const renderItem = ({ item }) => (

@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import axios from "axios";
 import { useFocusEffect } from "@react-navigation/native";
+import { API_BASE_URL } from "../config/api";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -48,8 +49,7 @@ const ChallengeScreen = () => {
   useEffect(() => {
     const fetchAthletes = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/v1/athletes");
-        console.log("response: ", response.data);
+        const response = await axios.get(`${API_BASE_URL}/api/v1/athletes`);
         setAthletes(response.data);
       } catch (error) {
         console.error("Error fetching athletes:", error);
@@ -90,7 +90,6 @@ const ChallengeScreen = () => {
         return isNotCurrentUser && matchesSearch;
       }
     );
-    console.log("Filtered athletes:", ahletesFiltered.length);
     return ahletesFiltered;
   };
 
@@ -108,7 +107,6 @@ const ChallengeScreen = () => {
     if (!searchOpponentRef.current) return;
     
     searchOpponentRef.current.measure((fx, fy, width, height, px, py) => {
-      console.log("Opponent dropdown position:", {fx, fy, width, height, px, py});
       setDropdownPosition({ top: py + height, left: px, width: width });
     });
   };
@@ -117,7 +115,6 @@ const ChallengeScreen = () => {
     if (!searchRefereeRef.current) return;
     
     searchRefereeRef.current.measure((fx, fy, width, height, px, py) => {
-      console.log("Referee dropdown position:", {fx, fy, width, height, px, py});
       setDropdownPositionReferee({ top: py + height, left: px, width: width });
     });
   };
@@ -127,9 +124,8 @@ const ChallengeScreen = () => {
       if (opponent && athlete_id) {
         try {
           const response = await axios.get(
-            `http://localhost:8000/api/v1/styles/common/${opponent.athlete_id}/${athlete_id}`
+            `${API_BASE_URL}/api/v1/styles/common/${opponent.athlete_id}/${athlete_id}`
           );
-          console.log("response from styles: ", response.data);
           setStyles(response.data);
         } catch (error) {
           console.error("Error fetching styles:", error);
@@ -149,7 +145,7 @@ const ChallengeScreen = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/bouts/pending/${athlete_id}`
+        `${API_BASE_URL}/api/v1/bouts/pending/${athlete_id}`
       );
       const json = await response.json();
       setPendingBouts(json);
@@ -164,7 +160,7 @@ const ChallengeScreen = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/bouts/incomplete/${athlete_id}`
+        `${API_BASE_URL}/api/v1/bouts/incomplete/${athlete_id}`
       );
       const json = await response.json();
       setIncompleteBouts(json);
@@ -183,7 +179,7 @@ const ChallengeScreen = () => {
         isDraw: isDraw,
       };
       const response = await axios.post(
-        `http://localhost:8000/api/v1/outcome/bout/${boutId}`,
+        `${API_BASE_URL}/api/v1/outcome/bout/${boutId}`,
         payload
       );
       if (response.status === 200) {
@@ -197,7 +193,7 @@ const ChallengeScreen = () => {
     if (boutId && athlete_id) {
       try {
         const response = await axios.put(
-          `http://localhost:8000/api/v1/bout/cancel/${boutId}/${athlete_id}`
+          `${API_BASE_URL}/api/v1/bout/cancel/${boutId}/${athlete_id}`
         );
         if (response.status === 200) {
           fetchPendingBouts();
@@ -212,7 +208,7 @@ const ChallengeScreen = () => {
     if (boutId) {
       try {
         const response = await axios.put(
-          `http://localhost:8000/api/v1/bout/${boutId}/accept`
+          `${API_BASE_URL}/api/v1/bout/${boutId}/accept`
         );
         if (response.status === 200) {
           fetchPendingBouts();
@@ -227,7 +223,7 @@ const ChallengeScreen = () => {
     if (boutId) {
       try {
         const response = await axios.put(
-          `http://localhost:8000/api/v1/bout/${boutId}/decline`
+          `${API_BASE_URL}/api/v1/bout/${boutId}/decline`
         );
         if (response.status === 200) {
           fetchPendingBouts();
@@ -239,12 +235,7 @@ const ChallengeScreen = () => {
   };
 
   const createBout = async () => {
-    console.log("opponent: ", opponent);
-    console.log("referee: ", referee);
-    console.log("selectedStyle: ", selectedStyle);
-    console.log("athlete_id: ", athlete_id);
     
-    // Check if we have all the required data
     if (!athlete_id) {
       console.error("You must be logged in to create a bout");
       Alert.alert("Error", "You must be logged in to create a bout. Please log out and log back in.");
@@ -283,15 +274,11 @@ const ChallengeScreen = () => {
       cancelled: false,
     };
 
-    console.log("Payload: ", payload);
-
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/v1/bout",
+        `${API_BASE_URL}/api/v1/bout`,
         payload
       );
-
-      console.log("Bout creation response:", response.data);
 
       if (response.status === 200) {
         setSearchOpponent("");
@@ -421,7 +408,7 @@ const ChallengeScreen = () => {
               <View style={layout.pendingBout} key={bout.boutId}>
                 <Text style={layout.pendingBoutTitle}>
                   vs.{" "}
-                  {athlete_id?.athleteId !== bout?.challengerId
+                  {athlete_id !== bout?.challengerId
                     ? `${bout.challengerFirstName} ${bout.challengerLastName}`
                     : `${bout.acceptorFirstName} ${bout.acceptorLastName}`}
                 </Text>
@@ -488,9 +475,9 @@ const ChallengeScreen = () => {
             <Text style={layout.pendingTitle}>Awaiting Referee Decision</Text>
             {incompleteBouts.map((bout) => (
               <View style={layout.pendingBout} key={bout.boutId}>
-                <Text style={layout.pendingBoutTitle}>
+               <Text style={layout.pendingBoutTitle}>
                   vs.{" "}
-                  {athlete_id?.athleteId !== bout?.challengerId
+                  {athlete_id !== bout?.challengerId
                     ? `${bout.challengerFirstName} ${bout.challengerLastName}`
                     : `${bout.acceptorFirstName} ${bout.acceptorLastName}`}
                 </Text>
@@ -524,63 +511,70 @@ const ChallengeScreen = () => {
                   </View>
                 </View>
                 <View style={layout.buttonContainer}>
-                  {athlete_id?.athleteId === bout?.refereeId ? (
-                    <View style={layout.decisionContainer}>
-                      <Text style={layout.refereeDecisionText}>Winner:</Text>
-                      <View style={layout.decisionButtons}>
-                        <TouchableOpacity
-                          style={layout.nameButton}
-                          onPress={() =>
-                            handleCompleteBout(
-                              bout.boutId,
-                              bout.challengerId,
-                              bout.acceptorId,
-                              bout.styleId,
-                              false
-                            )
-                          }
-                        >
-                          <Text style={layout.nameButtonText}>
-                            {bout.challengerFirstName} {bout.challengerLastName}
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={layout.nameButton}
-                          onPress={() =>
-                            handleCompleteBout(
-                              bout.boutId,
-                              bout.acceptorId,
-                              bout.challengerId,
-                              bout.styleId,
-                              false
-                            )
-                          }
-                        >
-                          <Text style={layout.nameButtonText}>
-                            {bout.acceptorFirstName} {bout.acceptorLastName}
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={layout.drawButton}
-                          onPress={() =>
-                            handleCompleteBout(
-                              bout.boutId,
-                              bout.challengerId,
-                              bout.acceptorId,
-                              bout.styleId,
-                              true
-                            )
-                          }
-                        >
-                          <Text style={layout.drawButtonText}>Draw</Text>
-                        </TouchableOpacity>
+                  {(() => {
+                    // Extract numeric ID if athleteId is an object
+                    const actualId = typeof athlete_id === 'object' && athlete_id !== null ? 
+                                   athlete_id.athleteId : athlete_id;
+                    console.log("Referee check - Current user ID:", actualId, "Bout referee ID:", bout?.refereeId);
+                    
+                    return actualId === bout?.refereeId ? (
+                      <View style={layout.decisionContainer}>
+                        <Text style={layout.refereeDecisionText}>Winner:</Text>
+                        <View style={layout.decisionButtons}>
+                          <TouchableOpacity
+                            style={layout.nameButton}
+                            onPress={() =>
+                              handleCompleteBout(
+                                bout.boutId,
+                                bout.challengerId,
+                                bout.acceptorId,
+                                bout.styleId,
+                                false
+                              )
+                            }
+                          >
+                            <Text style={layout.nameButtonText}>
+                              {bout.challengerFirstName} {bout.challengerLastName}
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={layout.nameButton}
+                            onPress={() =>
+                              handleCompleteBout(
+                                bout.boutId,
+                                bout.acceptorId,
+                                bout.challengerId,
+                                bout.styleId,
+                                false
+                              )
+                            }
+                          >
+                            <Text style={layout.nameButtonText}>
+                              {bout.acceptorFirstName} {bout.acceptorLastName}
+                            </Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={layout.drawButton}
+                            onPress={() =>
+                              handleCompleteBout(
+                                bout.boutId,
+                                bout.challengerId,
+                                bout.acceptorId,
+                                bout.styleId,
+                                true
+                              )
+                            }
+                          >
+                            <Text style={layout.drawButtonText}>Draw</Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                    </View>
-                  ) : (
-                    <Text style={layout.refereeDecisionText}>
-                      Awaiting Referee Decision
-                    </Text>
-                  )}
+                    ) : (
+                      <Text style={layout.refereeDecisionText}>
+                        Awaiting Referee Decision
+                      </Text>
+                    );
+                  })()}
                 </View>
               </View>
             ))}
@@ -615,6 +609,7 @@ const layout = StyleSheet.create({
     marginTop: 30,
     marginBottom: 1,
     textAlign: "center",
+    fontSize: 20,
   },
   inputText: {
     fontSize: 18,

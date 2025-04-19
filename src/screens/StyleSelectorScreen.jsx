@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSelector } from 'react-redux';
+import { API_BASE_URL } from "../config/api";
 
 const StyleSelectorScreen = (props) => {
   const [styles, setStyles] = useState([]);
@@ -22,7 +23,7 @@ const StyleSelectorScreen = (props) => {
   const fetchStyles = async () => {
     console.log("The athlete id when selecting style:", athleteId);
     try {
-      const response = await fetch('http://localhost:8000/api/v1/styles');
+      const response = await fetch(`${API_BASE_URL}/api/v1/styles`);
       const data = await response.json();
       setStyles(data);
     } catch (error) {
@@ -44,12 +45,15 @@ const StyleSelectorScreen = (props) => {
     console.log("final athleteId ", athleteId);
     console.log("final styles ", selectedStyles)
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/styles/athlete/${athleteId}`, {
+      // Extract the numeric ID from the athlete object
+      const actualId = athleteId.athlete_id || athleteId;
+      
+      const response = await fetch(`${API_BASE_URL}/api/v1/styles/athlete/${actualId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ athleteId, styles: selectedStyles }),
+        body: JSON.stringify({ athleteId: actualId, styles: selectedStyles }),
       });
 
       if (response.ok) {
@@ -59,6 +63,7 @@ const StyleSelectorScreen = (props) => {
       }
     } catch (error) {
       console.log('Error submitting styles:', error);
+      Alert.alert('Error', 'Failed to submit styles. Please try again.');
     }
   };
 

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSelector } from "react-redux";
 import axios from 'axios';
+import { API_BASE_URL } from "../config/api";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -22,29 +23,36 @@ const SearchScreen = () => {
   const athleteId = useSelector((state) => state.athlete.athleteId);
 
   useEffect(() => {
+    console.log("SearchScreen useEffect triggered, athleteId:", athleteId);
     const fetchAthletes = async () => {
-      const response = await axios.get('http://localhost:8000/api/v1/athletes');
+      console.log("Fetching all athletes");
+      const response = await axios.get(`${API_BASE_URL}/api/v1/athletes`);
       setAthletes(response.data);
     };
     fetchAthletes();
     fetchFollowing();
-  }, []);
+  }, [athleteId]);
 
   const fetchFollowing = async () => {
-    if (!athleteId) return;
+    if (!athleteId) {
+      console.log("No athleteId available, skipping fetchFollowing");
+      return;
+    }
     
     // Extract numeric ID if athleteId is an object
     const actualId = typeof athleteId === 'object' && athleteId !== null ? 
                     athleteId.athleteId : athleteId;
+    console.log("Fetching following list for athlete ID:", actualId);
                     
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/v1/athletes/following/${actualId}`,
+        `${API_BASE_URL}/api/v1/athletes/following/${actualId}`,
       );
-      console.log("response from fetch following: ", response)
+      console.log("Following list received:", response.data);
       setFollowing(response.data);
     } catch (error) {
       console.error("Error fetching following:", error);
+      console.error("Error details:", error.response?.data || error.message);
       setFollowing([]);
     }
   };
@@ -70,7 +78,10 @@ const SearchScreen = () => {
   };
 
   const handleFollow = async (followedId) => {
-    if (!athleteId) return;
+    if (!athleteId) {
+      console.log("No athleteId available, cannot follow/unfollow");
+      return;
+    }
     
     // Extract numeric ID if athleteId is an object
     const actualId = typeof athleteId === 'object' && athleteId !== null ? 
@@ -81,29 +92,35 @@ const SearchScreen = () => {
       followedId: followedId,
     }
     
-    console.log("payload for following: ", payload)
+    console.log("Follow/unfollow payload:", payload);
+    console.log("Current following status:", isFollowing(followedId));
     
     if (isFollowing(followedId)) {
       try {
-        await axios.delete(`http://localhost:8000/api/v1/athletes/${actualId}/${followedId}/unfollow`);
-        fetchFollowing();
+        console.log("Attempting to unfollow athlete:", followedId);
+        const response = await axios.delete(`${API_BASE_URL}/api/v1/athletes/${actualId}/${followedId}/unfollow`);
+        console.log("Unfollow response:", response.data);
+        await fetchFollowing(); // Use await to ensure the list is updated
       } catch (error) {
         console.error("Error unfollowing athlete:", error);
+        console.error("Error details:", error.response?.data || error.message);
       }
     } else {
       try {
-        const response = await axios.post('http://localhost:8000/api/v1/athletes/follow', payload);
+        console.log("Attempting to follow athlete:", followedId);
+        const response = await axios.post(`${API_BASE_URL}/api/v1/athletes/follow`, payload);
         console.log("Follow response:", response.data);
-        fetchFollowing();
+        await fetchFollowing(); // Use await to ensure the list is updated
       } catch (error) {
         console.error("Error following athlete:", error);
+        console.error("Error details:", error.response?.data || error.message);
       }
     }
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.item}>
-      <Text>{`${item.firstName} ${item.lastName} (${item.username})`}</Text>
+      <Text style={styles.athleteName}>{`${item.firstName} ${item.lastName} (${item.username})`}</Text>
       <TouchableOpacity
         style={[
           styles.followButton,
@@ -159,8 +176,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     margin: 10,
     justifyContent: 'center',
-    // width: screenWidth * 1,
     height: screenHeight * 0.08,
+    fontSize: 18, // Increased font size for search bar
   },
   item: {
     flexDirection: 'row',
@@ -170,6 +187,10 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: 'lightgray',
+  },
+  athleteName: {  // New style for athlete names
+    fontSize: 20,
+    fontWeight: '500',
   },
   followButton: {
     paddingHorizontal: 10,
@@ -193,4 +214,4 @@ const styles = StyleSheet.create({
 });
 
 export default SearchScreen;
-   
+

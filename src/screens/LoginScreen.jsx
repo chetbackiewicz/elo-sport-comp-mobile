@@ -10,13 +10,14 @@ import {
 } from 'react-native';
 
 import { setAthleteId } from '../reducers/athleteSlice';
-
 import { useDispatch } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from "../config/api";
 
 const LoginScreen = (props) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -27,7 +28,7 @@ const LoginScreen = (props) => {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/api/v1/athlete/authorize", {
+      const response = await fetch(`${API_BASE_URL}/api/v1/athlete/authorize`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,7 +61,7 @@ const LoginScreen = (props) => {
 
         // Store just the ID in AsyncStorage
         await AsyncStorage.setItem("athleteId", athleteId.toString());
-        
+
         props.navigation.navigate("Home", { initialRoute: 'Challenge' });
       } else {
         console.error("Login failed with status:", response.status);
@@ -78,7 +79,7 @@ const LoginScreen = (props) => {
         } : 'No response data'
       });
       Alert.alert(
-        "Error", 
+        "Error",
         "Could not connect to the server. Please check your internet connection and try again."
       );
     }
@@ -86,7 +87,7 @@ const LoginScreen = (props) => {
 
   const handleBypassLogin = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/v1/athlete/authorize", {
+      const response = await fetch(`${API_BASE_URL}/api/v1/athlete/authorize`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -103,7 +104,7 @@ const LoginScreen = (props) => {
       if (response.ok) {
         const athleteId = data.athleteId;
         console.log("Bypass login successful, athlete ID:", athleteId);
-        
+
         if (!athleteId) {
           Alert.alert("Error", "Invalid response from server");
           return;
@@ -112,7 +113,7 @@ const LoginScreen = (props) => {
         // Just store the ID directly
         console.log("Storing in Redux:", athleteId);
         dispatch(setAthleteId(athleteId));
-        
+
         await AsyncStorage.setItem("athleteId", athleteId.toString());
         props.navigation.navigate("Home", { initialRoute: 'Challenge' });
       } else {
@@ -136,14 +137,22 @@ const LoginScreen = (props) => {
         autoCapitalize="none"
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        onChangeText={(text) => setPassword(text)}
-        value={password}
-        secureTextEntry
-        autoCapitalize="none"
-      />
+      <View>
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          onChangeText={(text) => setPassword(text)}
+          value={password}
+          secureTextEntry={!showPassword}
+          autoCapitalize="none"
+        />
+        <TouchableOpacity
+          style={styles.showPasswordButton}
+          onPress={() => setShowPassword(!showPassword)}
+        >
+          <Text>{showPassword ? 'Show' : 'Hide'}</Text>
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
@@ -197,6 +206,11 @@ const styles = StyleSheet.create({
   signupLink: {
     color: '#1e90ff',
     textAlign: 'center',
+  },
+  showPasswordButton: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
   },
 });
 

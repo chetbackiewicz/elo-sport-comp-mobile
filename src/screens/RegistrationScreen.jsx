@@ -9,8 +9,8 @@ import {
   View
 } from 'react-native';
 import { setAthleteId } from '../reducers/athleteSlice';
-
 import { useSelector, useDispatch } from 'react-redux';
+import { API_BASE_URL } from "../config/api";
 
 const RegistrationScreen = (props) => {
   const [firstName, setFirstName] = useState('');
@@ -35,7 +35,7 @@ const RegistrationScreen = (props) => {
 
   const isUsernameAvailable = async (username) => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/athlete/all/usernames', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/athlete/all/usernames`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ const RegistrationScreen = (props) => {
     };
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/athlete', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/athlete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

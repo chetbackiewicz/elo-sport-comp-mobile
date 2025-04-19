@@ -6,6 +6,9 @@ import { useSelector } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
 import { setAthleteId } from '../reducers/athleteSlice';
 import { useDispatch } from 'react-redux';
+import { API_BASE_URL } from "../config/api";
+
+const placeholderImage = require('../assets/Placeholder.png');
 
 const MyProfileScreen = (props) => {
   const [profileData, setProfileData] = useState(null);
@@ -30,15 +33,17 @@ const MyProfileScreen = (props) => {
             return;
           }
 
-          const profileResponse = await fetch(`http://localhost:8000/api/v1/athlete/${athleteId}`);
+         
+          const actualId = typeof athleteId === 'object' ? athleteId.athleteId : athleteId;
+          const profileResponse = await fetch(`${API_BASE_URL}/api/v1/athlete/${actualId}`);
           if (!profileResponse.ok) {
             throw new Error(`HTTP error! Status fetching profile: ${profileResponse.status}`);
           }
-          const recordResponse = await fetch(`http://localhost:8000/api/v1/athlete/${athleteId}/record`);
+          const recordResponse = await fetch(`${API_BASE_URL}/api/v1/athlete/${actualId}/record`);
           if (!recordResponse.ok) {
             throw new Error(`HTTP error! Status fetching record: ${recordResponse.status}`);
           }
-          const scoreResponse = await fetch(`http://localhost:8000/api/v1/score/${athleteId}`);
+          const scoreResponse = await fetch(`${API_BASE_URL}/api/v1/score/${actualId}`);
           if (!scoreResponse.ok) {
             throw new Error(`HTTP error! Status fetching scores: ${scoreResponse.status}`);
           }
@@ -92,7 +97,7 @@ const MyProfileScreen = (props) => {
         {/* Profile picture */}
         <Image
           style={styles.profileImage}
-          source={{ uri: 'https://via.placeholder.com/100' }}
+          source={placeholderImage}
         />
             <Text style={styles.userName}>{username}</Text>
 
@@ -117,7 +122,6 @@ const MyProfileScreen = (props) => {
         <View style={styles.ratingContainer}>
           {scoreData && scoreData.length > 0 ? (
             scoreData.map((item, index) => {
-              console.log('Rendering score item:', item);
               return (
                 <View style={styles.ratingRow} key={`${item.styleName}-${index}`}>
                   <Text style={styles.styleName}>{item.styleName}</Text>

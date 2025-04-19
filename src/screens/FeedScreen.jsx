@@ -11,6 +11,7 @@ import {
 import { useSelector } from "react-redux";
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
+import { API_BASE_URL } from "../config/api";
 
 const FeedScreen = () => {
   const [feedData, setFeedData] = useState([]);
@@ -22,19 +23,22 @@ const FeedScreen = () => {
   const athleteId = useSelector((state) => state.athlete.athleteId);
 
   const fetchFeedData = async () => {
+    if (!athleteId) {
+      setLoading(false);
+      setError("Please log in to view your feed");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     
     try {
-      if (!athleteId) {
-        console.error("No athlete ID available for feed");
-        setError("You need to be logged in to view your feed");
-        setLoading(false);
-        return;
-      }
+      // Extract numeric ID if athleteId is an object
+      const actualId = typeof athleteId === 'object' && athleteId !== null ? 
+                      athleteId.athleteId : athleteId;
       
-      console.log("Fetching feed for athlete ID:", athleteId);
-      const response = await axios.get(`http://localhost:8000/api/v1/feed/${athleteId}`);
+      console.log("Fetching feed for athlete ID:", actualId);
+      const response = await axios.get(`${API_BASE_URL}/api/v1/feed/${actualId}`);
       console.log("Feed response:", response);
       console.log("Feed data:", response.data);
       
@@ -58,13 +62,15 @@ const FeedScreen = () => {
   };
 
   const onRefresh = useCallback(() => {
+    if (!athleteId) return;
     setRefreshing(true);
     fetchFeedData().then(() => setRefreshing(false));
-  }, []);
+  }, [athleteId]);
 
   useEffect(() => {
+    console.log("Feed screen mounted or athleteId changed:", athleteId);
     fetchFeedData();
-  }, []);
+  }, [athleteId]);
 
   const renderItem = ({ item }) => {
     const winner = item.winnerId === item.challengerId ? item.challengerFirstName + " " + item.challengerLastName  : item.acceptorFirstName + " " + item.acceptorLastName;
@@ -116,7 +122,12 @@ const FeedScreen = () => {
 
   return (
     <View style={styles.container}>
-      {loading && !refreshing ? (
+      {!athleteId ? (
+        <View style={styles.messageContainer}>
+          <Text style={styles.messageText}>Please log in to view your feed</Text>
+          <Text style={styles.messageSubText}>You'll see bout results from athletes you follow here!</Text>
+        </View>
+      ) : loading && !refreshing ? (
         <View style={styles.messageContainer}>
           <Text style={styles.messageText}>Loading feed data...</Text>
         </View>

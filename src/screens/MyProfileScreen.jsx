@@ -14,6 +14,7 @@ const MyProfileScreen = (props) => {
   const [profileData, setProfileData] = useState(null);
   const [recordData, setRecordData] = useState(null);
   const [scoreData, setScoreData] = useState(null);
+  const [styleMap, setStyleMap] = useState({});
 
   const dispatch = useDispatch();
 
@@ -22,6 +23,28 @@ const MyProfileScreen = (props) => {
   const handleLogout = () => {
     dispatch(setAthleteId(null));
     props.navigation.navigate('Login');
+  };
+
+  const fetchStyles = async () => {
+    try {
+      console.log('Fetching all styles');
+      const response = await fetch(`${API_BASE_URL}/api/v1/styles`);
+      console.log('Styles response status:', response.status);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status fetching styles: ${response.status}`);
+      }
+      const stylesJson = await response.json();
+      console.log('Styles data received:', JSON.stringify(stylesJson, null, 2));
+      
+      const stylesMap = {};
+      stylesJson.forEach(style => {
+        stylesMap[style.styleId] = style.name;
+      });
+      console.log('Styles map created:', stylesMap);
+      setStyleMap(stylesMap);
+    } catch (error) {
+      console.error('Error fetching styles:', error);
+    }
   };
 
   useFocusEffect(
@@ -33,41 +56,70 @@ const MyProfileScreen = (props) => {
             return;
           }
 
-         
+          await fetchStyles();
+
           const actualId = typeof athleteId === 'object' ? athleteId.athleteId : athleteId;
+          console.log('Fetching profile data for athlete ID:', actualId);
+
+          // Profile fetch
           const profileResponse = await fetch(`${API_BASE_URL}/api/v1/athlete/${actualId}`);
+          console.log('Profile response status:', profileResponse.status);
           if (!profileResponse.ok) {
             throw new Error(`HTTP error! Status fetching profile: ${profileResponse.status}`);
           }
+          const profileJson = await profileResponse.json();
+          console.log('Profile data received:', JSON.stringify(profileJson, null, 2));
+
+          // Record fetch
           const recordResponse = await fetch(`${API_BASE_URL}/api/v1/athlete/${actualId}/record`);
+          console.log('Record response status:', recordResponse.status);
           if (!recordResponse.ok) {
             throw new Error(`HTTP error! Status fetching record: ${recordResponse.status}`);
           }
+          const recordJson = await recordResponse.json();
+          console.log('Record data received:', JSON.stringify(recordJson, null, 2));
+
+          // Score fetch
           const scoreResponse = await fetch(`${API_BASE_URL}/api/v1/score/${actualId}`);
+          console.log('Score response status:', scoreResponse.status);
           if (!scoreResponse.ok) {
             throw new Error(`HTTP error! Status fetching scores: ${scoreResponse.status}`);
           }
-
-          const profileJson = await profileResponse.json();
-          const recordJson = await recordResponse.json();
           const scoreJson = await scoreResponse.json();
-          console.log('Score data received:', scoreJson);
+          console.log('Score data received:', JSON.stringify(scoreJson, null, 2));
+
           if (scoreJson == null) {
+            console.log('No score data received, setting empty array');
             setScoreData([]);
           } else {
+            console.log('Setting score data:', JSON.stringify(scoreJson, null, 2));
             setScoreData(scoreJson);
           }
+
+          console.log('Setting profile data:', JSON.stringify(profileJson, null, 2));
           setProfileData(profileJson);
+          
+          console.log('Setting record data:', JSON.stringify(recordJson, null, 2));
           setRecordData(recordJson);
         } catch (error) {
-          console.log('Error fetching data:', error);
+          console.error('Error fetching data:', error);
+          console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            response: error.response ? {
+              status: error.response.status,
+              data: error.response.data
+            } : 'No response data'
+          });
         }
       };
 
       fetchData();
 
       // Cleanup function
-      return () => {};
+      return () => {
+        console.log('Profile screen cleanup');
+      };
     }, [athleteId])
   );
 
@@ -99,7 +151,7 @@ const MyProfileScreen = (props) => {
           style={styles.profileImage}
           source={placeholderImage}
         />
-            <Text style={styles.userName}>{username}</Text>
+        <Text style={styles.userName}>{username}</Text>
 
         {/* Wins and Losses */}
         <View style={styles.winLossContainer}>
@@ -122,9 +174,10 @@ const MyProfileScreen = (props) => {
         <View style={styles.ratingContainer}>
           {scoreData && scoreData.length > 0 ? (
             scoreData.map((item, index) => {
+              const styleName = styleMap[item.styleId] || 'Unknown Style';
               return (
-                <View style={styles.ratingRow} key={`${item.styleName}-${index}`}>
-                  <Text style={styles.styleName}>{item.styleName}</Text>
+                <View style={styles.ratingRow} key={`${styleName}-${index}`}>
+                  <Text style={styles.styleName}>{styleName}</Text>
                   <Text style={styles.score}>{item.score}</Text>
                 </View>
               );
@@ -137,35 +190,34 @@ const MyProfileScreen = (props) => {
         {/* User information */}
         <Text style={styles.userInfoTitle}>Account Info</Text>
         <View style={styles.userInfoContainer}>
-            <View style={styles.userInfoRow}>
-                <Text style={styles.userInfoLabel}>Name </Text>
-                <Text style={styles.userInfoItem}>{firstName} {lastName}</Text>
+          <View style={styles.userInfoRow}>
+            <Text style={styles.userInfoLabel}>Name </Text>
+            <Text style={styles.userInfoItem}>{firstName} {lastName}</Text>
           </View>
           <View style={styles.userInfoRow}>
-                <Text style={styles.userInfoLabel}>Username </Text>
-                <Text style={styles.userInfoItem}>{username}</Text>
+            <Text style={styles.userInfoLabel}>Username </Text>
+            <Text style={styles.userInfoItem}>{username}</Text>
           </View>
           <View style={styles.userInfoRow}>
-                <Text style={styles.userInfoLabel}>Email </Text>
-                <Text style={styles.userInfoItem}>{email}</Text>
+            <Text style={styles.userInfoLabel}>Email </Text>
+            <Text style={styles.userInfoItem}>{email}</Text>
           </View>
           <View style={styles.userInfoRow}>
-                <Text style={styles.userInfoLabel}>Password </Text>
-                <Text style={styles.userInfoItem}>********</Text>
+            <Text style={styles.userInfoLabel}>Password </Text>
+            <Text style={styles.userInfoItem}>********</Text>
           </View>
           <View style={styles.userInfoRow}>
-                <Text style={styles.userInfoLabel}>Birthday </Text>
-                <Text style={styles.userInfoItem}>{new Date(birthDate).toLocaleDateString()}</Text>
+            <Text style={styles.userInfoLabel}>Birthday </Text>
+            <Text style={styles.userInfoItem}>{new Date(birthDate).toLocaleDateString()}</Text>
           </View>
         </View>
-      </View>
-      <View>
-      <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={() => handleLogout()}
-      >
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => handleLogout()}
+        >
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );

@@ -27,20 +27,17 @@ const MyProfileScreen = (props) => {
 
   const fetchStyles = async () => {
     try {
-      console.log('Fetching all styles');
       const response = await fetch(`${API_BASE_URL}/api/v1/styles`);
       console.log('Styles response status:', response.status);
       if (!response.ok) {
         throw new Error(`HTTP error! Status fetching styles: ${response.status}`);
       }
       const stylesJson = await response.json();
-      console.log('Styles data received:', JSON.stringify(stylesJson, null, 2));
-      
+
       const stylesMap = {};
       stylesJson.forEach(style => {
         stylesMap[style.styleId] = style.name;
       });
-      console.log('Styles map created:', stylesMap);
       setStyleMap(stylesMap);
     } catch (error) {
       console.error('Error fetching styles:', error);
@@ -98,7 +95,6 @@ const MyProfileScreen = (props) => {
 
           console.log('Setting profile data:', JSON.stringify(profileJson, null, 2));
           setProfileData(profileJson);
-          
           console.log('Setting record data:', JSON.stringify(recordJson, null, 2));
           setRecordData(recordJson);
         } catch (error) {
@@ -124,12 +120,12 @@ const MyProfileScreen = (props) => {
   );
 
   if (!profileData || !recordData || !scoreData) {
-  
+
     return (
       <View style={styles.container}>
-      <Text>Loading...</Text>
+        <Text>Loading...</Text>
       </View>
-      );
+    );
   }
 
   const {

@@ -137,8 +137,6 @@ const MyProfileScreen = (props) => {
     password,
   } = profileData;
 
-  const { wins, losses, draws } = recordData;
-
   return (
     <ScrollView>
       <View style={styles.container}>
@@ -148,22 +146,6 @@ const MyProfileScreen = (props) => {
           source={placeholderImage}
         />
         <Text style={styles.userName}>{username}</Text>
-
-        {/* Wins and Losses */}
-        <View style={styles.winLossContainer}>
-          <View style={styles.winLossItem}>
-            <Text style={styles.winLossTitle}>Wins</Text>
-            <Text style={styles.winLoss}>{wins}</Text>
-          </View>
-          <View style={styles.winLossItem}>
-            <Text style={styles.winLossTitle}>Draws</Text>
-            <Text style={styles.winLoss}>{draws}</Text>
-          </View>
-          <View style={styles.winLossItem}>
-            <Text style={styles.winLossTitle}>Losses</Text>
-            <Text style={styles.winLoss}>{losses}</Text>
-          </View>
-        </View>
 
         {/* Ratings */}
         <Text style={styles.ratingTitle}>Ratings</Text>
@@ -232,20 +214,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         marginTop: 20,
         alignSelf: 'center',
-    },
-    winLossContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginBottom: 20,
-    },
-    winLossItem: {
-        alignItems: 'center',
-        fontSize: 20,
-    },
-    winLossTitle: {
-        marginBottom: 10,
-        fontWeight: 'bold',
-        fontSize: 20,
     },
     winLoss: {
         fontSize: 18,

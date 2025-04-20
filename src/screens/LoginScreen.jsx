@@ -85,46 +85,6 @@ const LoginScreen = (props) => {
     }
   };
 
-  const handleBypassLogin = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/athlete/authorize`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: 'jsmith',
-          password: 'password123',
-        }),
-      });
-
-      const data = await response.json();
-      console.log("Bypass login response:", data);
-
-      if (response.ok) {
-        const athleteId = data.athleteId;
-        console.log("Bypass login successful, athlete ID:", athleteId);
-
-        if (!athleteId) {
-          Alert.alert("Error", "Invalid response from server");
-          return;
-        }
-
-        // Just store the ID directly
-        console.log("Storing in Redux:", athleteId);
-        dispatch(setAthleteId(athleteId));
-
-        await AsyncStorage.setItem("athleteId", athleteId.toString());
-        props.navigation.navigate("Home", { initialRoute: 'Challenge' });
-      } else {
-        Alert.alert("Error", data.error || "Login bypass failed");
-      }
-    } catch (error) {
-      console.error("Bypass login error:", error);
-      Alert.alert("Error", "Could not connect to the server");
-    }
-  };
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Login</Text>
@@ -156,10 +116,6 @@ const LoginScreen = (props) => {
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={[styles.button, styles.bypassButton]} onPress={handleBypassLogin}>
-        <Text style={styles.buttonText}>Login Bypass (John Smith)</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => props.navigation.navigate('Registration')}>
@@ -196,9 +152,6 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 15,
   },
-  bypassButton: {
-    backgroundColor: '#32cd32',
-  },
   buttonText: {
     color: '#fff',
     textAlign: 'center',
@@ -211,7 +164,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 10,
     top: 10,
-  },
+  }
 });
 
 export default LoginScreen;

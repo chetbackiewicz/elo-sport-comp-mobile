@@ -1,6 +1,4 @@
 - Display user-friendly error messages
-- Implement error boundaries
 - Log errors appropriately
-- Secure sensitive data storage
-- Validate all inputs
-- Handle authentication securely 
+- Add a comment summarizing what a function does above each function implemented
+- Don't add comments to terminal commands suggest

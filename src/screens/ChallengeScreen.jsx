@@ -25,8 +25,8 @@ const ChallengeScreen = () => {
   const [referee, setReferee] = useState(null);
   const [styles, setStyles] = useState([]);
   const [selectedStyle, setSelectedStyle] = useState(null);
-  const [pendingBouts, setPendingBouts] = useState(null);
-  const [incompleteBouts, setIncompleteBouts] = useState(null);
+  const [pendingBouts, setPendingBouts] = useState([]);
+  const [incompleteBouts, setIncompleteBouts] = useState([]);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const [dropdownPositionReferee, setDropdownPositionReferee] = useState({
     top: 0,
@@ -156,21 +156,54 @@ const ChallengeScreen = () => {
   };
 
   const fetchIncompleteBouts = async () => {
-    if (!athlete_id) return;
+    if (!athlete_id) {
+      console.log('No athlete ID available for fetching incomplete bouts');
+      setIncompleteBouts([]);
+      return;
+    }
+
+    const actualId = typeof athlete_id === 'object' ? athlete_id.athleteId : athlete_id;
+    console.log('Fetching incomplete bouts for athlete ID:', actualId);
 
     try {
       const response = await fetch(
-        `${API_BASE_URL}/api/v1/bouts/incomplete/${athlete_id}`
+        `${API_BASE_URL}/api/v1/bouts/incomplete/${actualId}`
       );
+      console.log('Incomplete bouts response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+        throw new Error(`Server error (${response.status}): ${errorText}`);
+      }
+      
       const json = await response.json();
-      setIncompleteBouts(json);
+      console.log('Incomplete bouts data received:', json);
+      
+      setIncompleteBouts(Array.isArray(json) ? json : []);
     } catch (error) {
-      console.error("Error fetching incomplete bouts:", error);
+      console.error("Error fetching incomplete bouts:", {
+        message: error.message,
+        cause: error.cause,
+        stack: error.stack
+      });
       setIncompleteBouts([]);
     }
   };
 
   const handleCompleteBout = async (boutId, winnerId, loserId, styleId, isDraw) => {
+    console.log('handleCompleteBout called with params:', {
+      boutId,
+      winnerId,
+      loserId,
+      styleId,
+      isDraw
+    });
+
     if (boutId && winnerId && loserId) {
       const payload = {
         winnerId: winnerId,
@@ -178,14 +211,47 @@ const ChallengeScreen = () => {
         styleId: styleId,
         isDraw: isDraw,
       };
-      const response = await axios.post(
-        `${API_BASE_URL}/api/v1/outcome/bout/${boutId}`,
-        payload
-      );
-      if (response.status === 200) {
-        fetchPendingBouts();
-        fetchIncompleteBouts();
+      
+      console.log('Sending bout completion payload:', JSON.stringify(payload, null, 2));
+      console.log('Request URL:', `${API_BASE_URL}/api/v1/outcome/bout/${boutId}`);
+      
+      try {
+        const response = await axios.post(
+          `${API_BASE_URL}/api/v1/outcome/bout/${boutId}`,
+          payload
+        );
+        console.log('Bout completion response:', {
+          status: response.status,
+          data: response.data
+        });
+        
+        if (response.status === 200) {
+          fetchPendingBouts();
+          fetchIncompleteBouts();
+        }
+      } catch (error) {
+        console.error('Bout completion error:', {
+          message: error.message,
+          response: error.response ? {
+            status: error.response.status,
+            data: error.response.data
+          } : 'No response data',
+          payload: payload
+        });
+        Alert.alert(
+          "Error",
+          error.response?.data?.error || "Failed to complete bout. Please try again."
+        );
       }
+    } else {
+      console.error('Invalid parameters for bout completion:', {
+        boutId,
+        winnerId,
+        loserId,
+        styleId,
+        isDraw
+      });
+      Alert.alert("Error", "Missing required information to complete bout.");
     }
   };
 
@@ -470,7 +536,7 @@ const ChallengeScreen = () => {
             ))}
           </View>
         )}
-        {incompleteBouts && (
+        {incompleteBouts && incompleteBouts.length > 0 ? (
           <View>
             <Text style={layout.pendingTitle}>Awaiting Referee Decision</Text>
             {incompleteBouts.map((bout) => (
@@ -578,6 +644,10 @@ const ChallengeScreen = () => {
                 </View>
               </View>
             ))}
+          </View>
+        ) : (
+          <View>
+            <Text style={layout.pendingTitle}>No Bouts Awaiting Decision</Text>
           </View>
         )}
       </View>

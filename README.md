@@ -17,6 +17,8 @@ The ELO Sport Competition app allows athletes to:
 - Node.js (v14 or higher)
 - npm or yarn
 - Expo CLI
+- Xcode (for iOS simulator)
+- iOS Simulator
 
 ### Setup
 1. Clone the repository
@@ -36,6 +38,41 @@ The ELO Sport Competition app allows athletes to:
    ```
    yarn start
    ```
+
+## Running on iOS Simulator
+
+1. Install Expo CLI globally if you haven't already:
+   ```
+   npm install -g expo-cli
+   ```
+
+2. Make sure you have Xcode installed (available on the Mac App Store)
+
+3. Open Xcode and install required iOS Simulator:
+   - Launch Xcode
+   - Go to Preferences > Components
+   - Download a simulator (e.g., iPhone 13)
+
+4. Start the Expo development server:
+   ```
+   npx expo start
+   ```
+
+5. When the Expo DevTools appear in your browser or terminal:
+   - Press `i` to open in iOS simulator
+   - Or click "Run on iOS simulator" option in the Expo DevTools interface
+
+6. The iOS Simulator will launch automatically and install the Expo app
+   - The app will load and connect to your Expo development server
+   - Changes to your code will automatically reload in the simulator
+
+7. To stop the app:
+   - Press Ctrl+C in the terminal running the Expo server
+   - Close the iOS Simulator window
+
+8. Ensure the api is running on port 8000
+   - https://github.com/chetbackiewicz/elo-sport-comp
+
 
 ## Features
 

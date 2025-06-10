@@ -147,6 +147,22 @@ const MyProfileScreen = (props) => {
         />
         <Text style={styles.userName}>{username}</Text>
 
+        {/* Win/Draw/Loss Stats */}
+        <View style={styles.recordContainer}>
+          <View style={styles.recordItem}>
+            <Text style={styles.recordLabel}>Wins</Text>
+            <Text style={styles.recordValue}>{recordData.wins || 0}</Text>
+          </View>
+          <View style={styles.recordItem}>
+            <Text style={styles.recordLabel}>Draws</Text>
+            <Text style={styles.recordValue}>{recordData.draws || 0}</Text>
+          </View>
+          <View style={styles.recordItem}>
+            <Text style={styles.recordLabel}>Losses</Text>
+            <Text style={styles.recordValue}>{recordData.losses || 0}</Text>
+          </View>
+        </View>
+
         {/* Ratings */}
         <Text style={styles.ratingTitle}>Ratings</Text>
         <View style={styles.ratingContainer}>
@@ -221,9 +237,31 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 16,
         fontWeight: 'bold',
-        marginBottom: 50,
+        marginBottom: 20,
         marginTop: 5,
         alignSelf: 'center',
+        textAlign: 'center',
+    },
+    recordContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        width: '100%',
+        marginBottom: 30,
+        paddingHorizontal: 20,
+    },
+    recordItem: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    recordLabel: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        textAlign: 'center',
+    },
+    recordValue: {
+        fontSize: 18,
         textAlign: 'center',
     },
     ratingTitle: {

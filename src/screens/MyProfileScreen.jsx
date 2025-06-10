@@ -231,9 +231,6 @@ const styles = StyleSheet.create({
         marginTop: 20,
         alignSelf: 'center',
     },
-    winLoss: {
-        fontSize: 18,
-    },
     userName: {
         fontSize: 16,
         fontWeight: 'bold',

@@ -146,6 +146,22 @@ const MyProfileScreen = (props) => {
           source={placeholderImage}
         />
         <Text style={styles.userName}>{username}</Text>
+        
+        {/* Stats - Wins, Draws, Losses */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Wins</Text>
+            <Text style={styles.statValue}>{recordData?.wins || 0}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Draws</Text>
+            <Text style={styles.statValue}>{recordData?.draws || 0}</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statLabel}>Losses</Text>
+            <Text style={styles.statValue}>{recordData?.losses || 0}</Text>
+          </View>
+        </View>
 
         {/* Ratings */}
         <Text style={styles.ratingTitle}>Ratings</Text>
@@ -202,112 +218,129 @@ const MyProfileScreen = (props) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-    },
-    profileImage: {
-        width: '35%',
-        height: undefined,
-        aspectRatio: 1,
-        borderRadius: 100,
-        marginBottom: 20,
-        marginTop: 20,
-        alignSelf: 'center',
-    },
-    winLoss: {
-        fontSize: 18,
-    },
-    userName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 50,
-        marginTop: 5,
-        alignSelf: 'center',
-        textAlign: 'center',
-    },
-    ratingTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        marginTop: 15,
-        alignSelf: 'center',
-        textAlign: 'center',
-    },
-    ratingContainer: {
-        width: '100%',
-        flexDirection: 'column',
-        marginBottom: 20,
-      },
-      ratingRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingHorizontal: '5%',
-        marginBottom: 10,
-      },
-      styleName: {
-        flex: 1,
-        fontStyle: 'italic',
-        textAlign: 'center', 
-      },
-      score: {
-        flex: 1,
-        textAlign: 'center',
-      },
-      userInfoTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        marginTop: 55,
-        alignSelf: 'center',
-        textAlign: 'center',
-    },
-    userInfoContainer: {
-        width: '100%',
-        flexDirection: 'column',
-        marginBottom: 20,
-      },
-      userInfoRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingHorizontal: '5%',
-        marginBottom: 10,
-      },
-    userInfoLabel: {
-        marginBottom: 10,
-        fontWeight: 'bold',
-        fontSize: 11,
-    },
-    userInfoItem: {
-        marginBottom: 10,
-        fontWeight: 'bold',
-        fontSize: 11,
-    },
-    logoutButton: {
-      backgroundColor: "#fff",
-      borderColor: "#000",
-      borderRadius: 5,
-      borderWidth: 2,
-      padding: 10,
-      marginBottom: 50,
-      marginTop: 50,
-      alignSelf: "center",
-      width: "80%",
-      fontSize: 18,
-    },
-    logoutButtonText: {
-      color: "#000",
-      textAlign: "center",
-      fontSize: 18,
-      fontWeight: "bold",
-      paddingTop: 5,
-    },
-    noScores: {
-      textAlign: 'center',
-      fontStyle: 'italic',
-      color: '#666',
-      marginTop: 10,
-    },
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  profileImage: {
+    width: '35%',
+    height: undefined,
+    aspectRatio: 1,
+    borderRadius: 100,
+    marginBottom: 20,
+    marginTop: 20,
+    alignSelf: 'center',
+  },
+  winLoss: {
+    fontSize: 18,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    marginTop: 5,
+    alignSelf: 'center',
+    textAlign: 'center',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 30,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statLabel: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  statValue: {
+    fontSize: 18,
+  },
+  ratingTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    marginTop: 10,
+    alignSelf: 'center',
+    textAlign: 'center',
+  },
+  ratingContainer: {
+    width: '100%',
+    flexDirection: 'column',
+    marginBottom: 20,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: '5%',
+    marginBottom: 10,
+  },
+  styleName: {
+    flex: 1,
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  score: {
+    flex: 1,
+    textAlign: 'center',
+  },
+  userInfoTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    marginTop: 55,
+    alignSelf: 'center',
+    textAlign: 'center',
+  },
+  userInfoContainer: {
+    width: '100%',
+    flexDirection: 'column',
+    marginBottom: 20,
+  },
+  userInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: '5%',
+    marginBottom: 10,
+  },
+  userInfoLabel: {
+    marginBottom: 10,
+    fontWeight: 'bold',
+    fontSize: 11,
+  },
+  userInfoItem: {
+    marginBottom: 10,
+    fontWeight: 'bold',
+    fontSize: 11,
+  },
+  logoutButton: {
+    backgroundColor: "#fff",
+    borderColor: "#000",
+    borderRadius: 5,
+    borderWidth: 2,
+    padding: 10,
+    marginBottom: 50,
+    marginTop: 50,
+    alignSelf: "center",
+    width: "80%",
+    fontSize: 18,
+  },
+  logoutButtonText: {
+    color: "#000",
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "bold",
+    paddingTop: 5,
+  },
+  noScores: {
+    textAlign: 'center',
+    fontStyle: 'italic',
+    color: '#666',
+    marginTop: 10,
+  },
 });
 
 export default MyProfileScreen;

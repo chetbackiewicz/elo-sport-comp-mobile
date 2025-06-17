@@ -163,6 +163,16 @@ const MyProfileScreen = (props) => {
           ) : (
             <Text style={styles.noScores}>No ratings available</Text>
           )}
+          
+          {/* View Score History Button */}
+          {scoreData && scoreData.length > 0 && (
+            <TouchableOpacity
+              style={styles.historyButton}
+              onPress={() => props.navigation.navigate('ELOProgression')}
+            >
+              <Text style={styles.historyButtonText}>View Score History</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* User information */}
@@ -307,6 +317,22 @@ const styles = StyleSheet.create({
       fontStyle: 'italic',
       color: '#666',
       marginTop: 10,
+    },
+    historyButton: {
+      backgroundColor: "#fff",
+      borderColor: "#000",
+      borderRadius: 5,
+      borderWidth: 2,
+      padding: 10,
+      marginTop: 20,
+      alignSelf: "center",
+      width: "80%",
+    },
+    historyButtonText: {
+      color: "#000",
+      textAlign: "center",
+      fontSize: 16,
+      fontWeight: "bold",
     },
 });
 

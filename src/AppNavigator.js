@@ -7,6 +7,7 @@ import StyleSelectorScreen from './screens/StyleSelectorScreen';
 import LoginScreen from './screens/LoginScreen';
 import NavigationBar from './components/NavigationBar';
 import MyProfileScreen from './screens/MyProfileScreen';
+import ELOProgressionScreen from './screens/ELOProgressionScreen';
 
 const Stack = createStackNavigator();
 
@@ -33,6 +34,8 @@ function AppNavigator() {
     options={{ headerShown: false, title: 'Home', headerLeft: () => null }}
     />
     <Stack.Screen name="Profile" component={MyProfileScreen} />
+    <Stack.Screen name="ELOProgression" component={ELOProgressionScreen} 
+      options={{ title: 'ELO Score History' }} />
   </Stack.Navigator>
   );
 }
